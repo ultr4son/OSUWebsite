@@ -1,0 +1,9 @@
+body
+{
+	font-family:"Consolas"; //Consolas is my favorite :)
+}
+img.smallImage
+{
+	height: auto;
+	width: 25%;
+}

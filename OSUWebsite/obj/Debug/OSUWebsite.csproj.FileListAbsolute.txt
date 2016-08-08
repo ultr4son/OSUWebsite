@@ -1,0 +1,6 @@
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\bin\OSUWebsite.dll.config
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\bin\OSUWebsite.dll
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\bin\OSUWebsite.pdb
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\obj\Debug\OSUWebsite.csprojResolveAssemblyReference.cache
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\obj\Debug\OSUWebsite.dll
+c:\users\tristan thompson\documents\visual studio 2015\Projects\OSUWebsite\OSUWebsite\obj\Debug\OSUWebsite.pdb

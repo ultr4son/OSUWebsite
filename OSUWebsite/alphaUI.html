@@ -1,0 +1,32 @@
+<head>
+	<script src = "jquery-3.1.0.min.js" type = "text/javascript"></script>
+	<script src = "app.js" type = "text/javascript"></script>
+    <script src= "Scripts/Alpha/Stream.js" type = "text/javascript"></script>
+    <script src= "Scripts/Alpha/AlphaInterpreter.js" type = "text/javascript"></script>
+    <script src = "Scripts/Alpha/AlphaReader.js" type = "text/javascript"></script>
+	<script src = "Scripts/Alpha/AlphaUIHandler.js" type = "text/javascript"></script>
+    <script src ="Scripts/AlphaUIPage.js" type = "text/javascript"></script>
+</head>
+<body>
+	<div id = "navbar"></div>
+	<table> <!-- screw your css -->
+		<tr>
+			<td><p>Editor:</p></td>
+			<td><p>Input:</p></td>
+			<td><p>Output:</p></td>
+		</tr>
+		<tr>
+			<td><textarea id = "code"></textarea></td>
+			<td><textarea id = "input"></textarea></td>
+			<td><textarea id = "output"></textarea></td>
+		</tr>
+		
+	</table>
+    <button id="stop">Stop</button>
+	<button id="pause">Pause</button>
+	<button id="continue">Continue</button>
+	<button id="step">Step!</button>
+	<p id = "status"></p>
+	<button id="run">Run</button>
+
+</body>
