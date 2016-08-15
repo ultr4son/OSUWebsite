@@ -6,22 +6,22 @@
         outNumeric (numeric: number): void;
         outChar (char: string): void;
     }
-    export interface BreakpointHandler {
-        (interpreter: AlphaInterpreter): void;
+    export interface AlphaBreakpointHandler {
+        breakpoint(interpreter: AlphaInterpreter): void;
     }
 
     export class AlphaInterpreter {
         exacutable: AlphaExacutable;
         accumulator: number = 0;
         stack: number[] = [];
-        readInput: AlphaInput;
-        writeOutput: AlphaOutput;
-        notifyBreakpoint: BreakpointHandler;
-        constructor(exacutable: AlphaExacutable, input: AlphaInput, output: AlphaOutput, breakpoint: BreakpointHandler) {
+        inputReader: AlphaInput;
+        outputWriter: AlphaOutput;
+        breakpointHandler: AlphaBreakpointHandler;
+        constructor(exacutable: AlphaExacutable, input: AlphaInput, output: AlphaOutput, breakpoint: AlphaBreakpointHandler) {
             this.exacutable = exacutable;
-            this.writeOutput = output;
-            this.readInput = input;
-            this.notifyBreakpoint = breakpoint;
+            this.outputWriter = output;
+            this.inputReader = input;
+            this.breakpointHandler = breakpoint;
         }
         public runBlock() {
             if (this.exacutable.executionStream.atEnd()) {
@@ -31,10 +31,10 @@
             try {
                 this.exec(block, this.exacutable.jumpTable);
             } catch (err) {
-                this.writeOutput.outChar(err);
+                this.outputWriter.outChar(err);
             }
             if (block.breakpoint) {
-                this.notifyBreakpoint(this);
+                this.breakpointHandler.breakpoint(this);
             }
         }
         public atEnd() {
@@ -64,7 +64,7 @@
                     }
                 }
                 else if (block.value == "I") {
-                    value = this.readInput.input();
+                    value = this.inputReader.input();
                 }
                 value = <number>block.value;
             }
@@ -97,10 +97,10 @@
                     }
                     break;
                 case ActionType.OUTPUT_CHAR:
-                    this.writeOutput.outChar(String.fromCharCode(this.accumulator));
+                    this.outputWriter.outChar(String.fromCharCode(this.accumulator));
                     break;
                 case ActionType.OUTPUT_NUMBER:
-                    this.writeOutput.outNumeric(this.accumulator);
+                    this.outputWriter.outNumeric(this.accumulator);
                     break;
                 case ActionType.POP:
                     if (this.stack.length > 0) {
@@ -113,9 +113,10 @@
                 case ActionType.PUSH:
                     this.stack.push(this.accumulator);
                     break;
-                case ActionType.NONE:
                 case ActionType.NOP:
-                    break
+                    break;
+
+                case ActionType.NONE:
                 default:
                     throw "Invalid action";
             }

@@ -41,6 +41,7 @@
     <TypeScriptCompile Include="Scripts\Alpha\AlphaUIHandler.ts" />
     <TypeScriptCompile Include="Scripts\Alpha\Stream.ts" />
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="Scripts\Alpha\Tree.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
   </ItemGroup>
   <ItemGroup>

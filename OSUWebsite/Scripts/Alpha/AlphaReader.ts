@@ -1,5 +1,6 @@
 ﻿module Alpha {
 
+    
     export enum ActionType {
         ACCUMULATE,
         JMP_GREATER,
@@ -28,7 +29,7 @@
         return !isNaN(n) && isFinite(n);
     }
     export interface AlphaExacutable {
-        executionStream: Stream<AlphaBlock>
+        executionStream: Structure.Stream<AlphaBlock>
         jumpTable: {
             [tagName: string]: number
         };
@@ -66,11 +67,13 @@
         }
 
     }
+    
 
     /**
      * A converter class that will convert raw alpha to blocks.
      */
     export class AlphaReader {
+
         private BREAKPOINT_CHAR = "*";
         private TAG_CHAR = ":";
         private ACCUMULATOR_REG = "A";
@@ -78,32 +81,54 @@
         private INPUT_REG = "I";
         private STACK_REG = "S";
         private CHAR_DELIMITER = "'";
-        writeError: AlphaOutput;
-        associationTable =
+        static associationTable =
         {
             "acc": ActionType.ACCUMULATE,
+            "a": ActionType.ACCUMULATE,
+
+            "b": ActionType.JMP_GREATER,
             "jgz": ActionType.JMP_GREATER,
+
+            "c": ActionType.JMP_ZERO,
             "jez": ActionType.JMP_ZERO,
+
+            "d": ActionType.JMP_LESS,
             "jlz": ActionType.JMP_LESS,
+
+            "e": ActionType.JMP,
             "jmp": ActionType.JMP,
+
+            "g": ActionType.ASSIGN,
             "giv": ActionType.ASSIGN,
+
+            "o": ActionType.OUTPUT_CHAR,
             "oc": ActionType.OUTPUT_CHAR,
+
+            "n": ActionType.OUTPUT_NUMBER,
             "on": ActionType.OUTPUT_NUMBER,
+
+            "p": ActionType.PUSH,
             "push": ActionType.PUSH,
+
+            "l": ActionType.POP,
             "pop": ActionType.POP,
+
+            "f": ActionType.FLUSH,
             "flush": ActionType.FLUSH,
+
+            "z": ActionType.NOP,
             "nop": ActionType.NOP
         }
-        reader: Stream<string>
+
+        reader: Structure.Stream<string>
         blocks: AlphaBlock[] = [];
 
 
-        constructor(raw: string, errorWriter: AlphaOutput) {
+        constructor(raw: string) {
             var rawScript = raw.replace(/\s|#.*#/g, "");//Remove whitespace and comments
-            this.reader = new Stream(rawScript.split(""));
-            this.writeError = errorWriter;
+            this.reader = new Structure.Stream(rawScript.split(""));
         }
-       
+
         /**
          * Process the given raw alpha code. Returns a list of blocks in order of execution, as well as a convinience jump table.
          */
@@ -112,21 +137,16 @@
                 executionStream: undefined,
                 jumpTable: {}
             };
-            
+
             while (!this.reader.atEnd()) {
-                try {
-                    var block = this.readBlock();
-                }
-                catch (err) {
-                    this.writeError.outChar(err);
-                    return;
-                }
+                var block = this.readBlock();
+
                 if (block.blockType == BlockType.TAG) {
                     processed.jumpTable[block.tag] = <number>block.value;//Make it easy to reference tags later
                 }
                 this.blocks.push(block);
             }
-            processed.executionStream = new Stream<AlphaBlock>(this.blocks);
+            processed.executionStream = new Structure.Stream<AlphaBlock>(this.blocks);
             return processed;
         }
         /**
@@ -253,35 +273,61 @@
         private readTag(): string {
             return this.readToDelimiter(":");
         }
-        
+
+
         /**
          * Read untill a non-action character is found. Throws an error if action is not valid.
          */
         private readAction(): ActionType {
-            var act: string = "";
+            var actionAccumulator = "";
+            var acceptableCharacters;
+            var mostLikely = "";
             do {
-
                 var c = this.reader.read();
-                if (this.terminationCharacter(c)) {
-                    this.reader.unRead();
-                    break;
+                actionAccumulator += c;
+
+                //Find which characters would be in a valid command.
+                acceptableCharacters = this.acceptableCharacters(actionAccumulator); 
+
+                var action = this.toAction(actionAccumulator);
+
+                //A valid action has been found, but it may be a part of a larger string.
+                if (action != null) 
+                {
+                    // Store what the action most likely is.
+                    mostLikely = actionAccumulator; 
                 }
 
-                act += c;
-            } while (!this.reader.atEnd());
+                //The next character will not create a valid action
+                if (!this.isAcceptable(this.reader.peek(), acceptableCharacters)) { 
 
-            var action = this.toAction(act);
-            if (action != null) {
-                return action;
+                    //Assume that the user meant whatever the last valid action was. 
+                    this.unReadAmount(Math.abs(actionAccumulator.length - mostLikely.length));
+                    break;
+                }
+               
+            } while (!this.reader.atEnd());
+            var actualAction = this.toAction(mostLikely);
+            if (actualAction == null) {
+                var invalid = mostLikely == "" ? actionAccumulator : mostLikely; //Try to give a helpful error message.
+                throw "Invalid action " + invalid;
+
             }
-            throw "Action " + act + " is invalid";
+            return actualAction;
+        }
+        private unReadAmount(amount: number) {
+            for (var i = 0; i < amount; i++) {
+                this.reader.unRead();
+            }
         }
         /**
          * Returns if character cannot be in an action string.
          * @param c The character
          */
-        private terminationCharacter(c: string) {
-            return c == this.ACCUMULATOR_REG ||
+        private terminationCharacter(c: string): boolean {
+            
+            var standardTerminator =
+                c == this.ACCUMULATOR_REG ||
                 c == this.BREAKPOINT_CHAR ||
                 c == this.INPUT_REG ||
                 c == this.NEG_ACCUMULATOR_REG ||
@@ -290,15 +336,40 @@
                 c == this.CHAR_DELIMITER || 
                 c == "-" ||
                 isNumber(c);
-                
+
+            return standardTerminator;
         }
+   
+        private acceptableCharacters(stringAction: string): string[] {
+            var chars: string[] = [];
+            for (var key in AlphaReader.associationTable) {
+                if (stringAction == key) {
+                    continue;
+                }
+                if (key.search(stringAction) == 0) { //Action starts at beginning of string
+                    chars.push(key[stringAction.length]);
+                }
+            }
+            return chars;
+        }
+        private isAcceptable(c: string, acceptableCharacters: string[]): boolean {
+            for (var acceptable of acceptableCharacters)
+            {
+                if (c == acceptable) {
+                    return true;
+                }
+            }
+            return false;
+        }
+       
         private toAction(stringAction: string): ActionType {
-            if (stringAction in this.associationTable) {
-                return this.associationTable[stringAction]; 
+            if (stringAction in AlphaReader.associationTable) {
+                return AlphaReader.associationTable[stringAction]; 
             }
             return null;
 
         }
-     
+
+        
     }
 }

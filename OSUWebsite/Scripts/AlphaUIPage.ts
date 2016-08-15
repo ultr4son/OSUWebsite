@@ -5,7 +5,6 @@ window.onload = () => {
     var code = <HTMLTextAreaElement>document.getElementById("code");
     var status = <HTMLParagraphElement> document.getElementById("status");
 
-    
     var uiHandler = new Alpha.AlphaUIHandler(input, output, code, status);
 
     var runButton = document.getElementById("run");
@@ -15,12 +14,7 @@ window.onload = () => {
     var continueButton = document.getElementById("continue");
 
     runButton.onclick = (ev: any) => {
-        try {
-            uiHandler.setupAlphaInterpreter();
-        } catch (err) {
-            return;
-        }
-        uiHandler.runAlphaPeriodic();
+        uiHandler.runAlphaInterpreter();
     };
     stopButton.onclick = uiHandler.stop;
     pauseButton.onclick = uiHandler.pause;

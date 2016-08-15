@@ -1,74 +1,73 @@
 ﻿module Alpha {
-
-    interface UIEnvironment {
-        executionHandle: number;
-        interpreter: AlphaInterpreter;
-    }
   
     export class AlphaUIHandler {
-        intervalHandle: number;
         interpreter: AlphaInterpreter;
-        break: boolean = false;
-
+        stopInterpreter: boolean;
         codeElement: HTMLTextAreaElement;
         statusElement: HTMLParagraphElement;
 
         inputReader: AlphaUIInput;
         outputWriter: AlphaUIOutput;
-        breakpoint: Alpha.BreakpointHandler = function (interpreter: Alpha.AlphaInterpreter) {
-            this.statusElement.innerHTML = "A: " + interpreter.accumulator; + "\n" + "S: " + interpreter.stack; + "\n" + "Index: " + interpreter.exacutable.executionStream.index;
-            this.break = true;
-        }
+        breakpointHandler: AlphaUIBreakpoint;
+        
         constructor(inputElement: HTMLTextAreaElement, outputElement: HTMLTextAreaElement, codeElement: HTMLTextAreaElement, breakpointElement: HTMLParagraphElement) {
-            inputElement = inputElement;
             this.outputWriter = new AlphaUIOutput(outputElement);
             this.inputReader = new AlphaUIInput(inputElement);
+            this.breakpointHandler = new AlphaUIBreakpoint(breakpointElement)
             this.codeElement = codeElement;
-            this.statusElement = breakpointElement;
-
-
         }
-        public setupAlphaInterpreter() {
+        public runAlphaInterpreter() {
+            this.stopInterpreter = false;
+            this.inputReader.reset();
+            this.outputWriter.reset();
             var code = this.codeElement.value;
-            var converter = new Alpha.AlphaReader(code, this.outputWriter);
-            var exacutable = converter.process();
-            this.interpreter = new Alpha.AlphaInterpreter(exacutable, this.inputReader, this.outputWriter, this.breakpoint);
+            var converter = new Alpha.AlphaReader(code);
+            try {
+                var exacutable = converter.process();
+            }
+            catch (err) {
+                this.outputWriter.outChar(err);
+                return;
+            }
+            this.interpreter = new Alpha.AlphaInterpreter(exacutable, this.inputReader, this.outputWriter, this.breakpointHandler);
+            this.runAlphaPeriodic();
         }
         public runAlphaPeriodic() {
-            this.intervalHandle = window.setInterval(this.runAlphaPeriodicHandler, 1, this);
+            window.setTimeout(this.runAlphaPeriodicHandler, 1, this);
         }
         public step() {
             this.interpreter.runBlock();
-            this.breakpoint(this.interpreter);
+            this.breakpointHandler.breakpoint(this.interpreter);
         }
         public pause() {
-            this.break = true;
-            this.breakpoint(this.interpreter);
+            this.breakpointHandler.break = true;
+            this.breakpointHandler.breakpoint(this.interpreter);
         }
         public stop() {
-            if (this.intervalHandle != undefined) {
-                window.clearInterval(this.intervalHandle);
-            }
+            this.stopInterpreter = true;
         }
         public continue() {
-            this.break = false;
+            this.breakpointHandler.break = false;
         }
         private runAlphaPeriodicHandler(ui: AlphaUIHandler) {
             if (ui.interpreter == undefined) {
                 console.error("Interpreter hasn't been setup!");
-                window.clearInterval(ui.intervalHandle)
-                return;
-            }
-            if (this.break) {
                 return;
             }
             if (ui.interpreter.atEnd()) {
-                window.clearInterval(ui.intervalHandle);
-                ui.intervalHandle = undefined;
+                return; //This will cancel the next immediate.
             }
+
+            if (ui.breakpointHandler.break) {
+                ui.runAlphaPeriodic();
+                return;
+            }
+
             ui.interpreter.runBlock();
+            ui.runAlphaPeriodic();
         }
     }
+    //These classes are necessary because when they are called as handlers, the this object points to the interpreter, not the AlphaUIHandler instance.
     class AlphaUIOutput implements AlphaOutput {
         outputElement: HTMLTextAreaElement
         outChar(char: string) {
@@ -76,6 +75,9 @@
         }
         outNumeric(numeric: number) {
             this.outputElement.value += numeric.toString();
+        }
+        public reset() {
+            this.outputElement.value = "";
         }
         constructor(output: HTMLTextAreaElement) {
             this.outputElement = output;
@@ -91,9 +93,25 @@
             this.inputIndex = 0;
         }
         input(): number {
+            if (this.inputIndex > this.inputElement.value.length) {
+                return 0;
+            }
             var input = this.inputElement.value.substring(0, this.inputIndex).charCodeAt(0);
             this.inputIndex++;
+           
             return input;
         }
+    }
+    class AlphaUIBreakpoint implements AlphaBreakpointHandler {
+        statusElement: HTMLParagraphElement;
+        break: boolean = false;
+        constructor(statusElement: HTMLParagraphElement) {
+            this.statusElement = statusElement;
+        }
+        breakpoint(interpreter: AlphaInterpreter) {
+            this.statusElement.innerHTML = "A: " + interpreter.accumulator; + "\n" + "S: " + interpreter.stack; + "\n" + "Index: " + interpreter.exacutable.executionStream.index;
+            this.break = true;
+        }
+
     }
 }
