@@ -16,7 +16,10 @@
             this.breakpointHandler = new AlphaUIBreakpoint(breakpointElement)
             this.codeElement = codeElement;
         }
-        public runAlphaInterpreter() {
+        /**
+         * Sets up and runs an instance of an alpha interpreter.
+         */
+        public runAlphaInterpreter():void {
             this.stopInterpreter = false;
             this.inputReader.reset();
             this.outputWriter.reset();
@@ -26,35 +29,57 @@
                 var exacutable = converter.process();
             }
             catch (err) {
-                this.outputWriter.outChar(err);
+                this.outputWriter.outStr(err);
                 return;
             }
             this.interpreter = new Alpha.AlphaInterpreter(exacutable, this.inputReader, this.outputWriter, this.breakpointHandler);
             this.runAlphaPeriodic();
         }
-        public runAlphaPeriodic() {
+        /**
+         * Set a timeout for one ms from now to run the periodic handler
+         */
+        private runAlphaPeriodic(): void {
             window.setTimeout(this.runAlphaPeriodicHandler, 1, this);
         }
-        public step() {
+        /**
+         * Run a single block and update the breakpoint handler.
+         */
+        public step(): void {
+            if (this.interpreter.atEnd()) {
+                return;
+            }
             this.interpreter.runBlock();
             this.breakpointHandler.breakpoint(this.interpreter);
         }
-        public pause() {
+        /**
+         * Stop execution and update the breakpoint handler.
+         */
+        public pause(): void {
             this.breakpointHandler.break = true;
             this.breakpointHandler.breakpoint(this.interpreter);
         }
-        public stop() {
+        /**
+         * Tell the periodic handler to stop executing.
+         */
+        public stop(): void {
             this.stopInterpreter = true;
         }
-        public continue() {
+        /**
+         * Continue normal execution
+         */
+        public continue(): void {
             this.breakpointHandler.break = false;
         }
-        private runAlphaPeriodicHandler(ui: AlphaUIHandler) {
+        /**
+         * Handles a single step of execution. Will schedule itself if a block is run.
+         * @param ui The executing AlphaUIHandler
+         */
+        private runAlphaPeriodicHandler(ui: AlphaUIHandler): void {
             if (ui.interpreter == undefined) {
                 console.error("Interpreter hasn't been setup!");
                 return;
             }
-            if (ui.interpreter.atEnd()) {
+            if (ui.interpreter.atEnd() || ui.stopInterpreter) {
                 return; //This will cancel the next immediate.
             }
 
@@ -70,13 +95,13 @@
     //These classes are necessary because when they are called as handlers, the this object points to the interpreter, not the AlphaUIHandler instance.
     class AlphaUIOutput implements AlphaOutput {
         outputElement: HTMLTextAreaElement
-        outChar(char: string) {
+        outStr(char: string): void {
             this.outputElement.value += char;
         }
-        outNumeric(numeric: number) {
+        outNumeric(numeric: number): void {
             this.outputElement.value += numeric.toString();
         }
-        public reset() {
+        public reset(): void {
             this.outputElement.value = "";
         }
         constructor(output: HTMLTextAreaElement) {
@@ -89,7 +114,7 @@
         constructor(inputElement: HTMLTextAreaElement) {
             this.inputElement = inputElement;
         }
-        public reset() {
+        public reset(): void {
             this.inputIndex = 0;
         }
         input(): number {
@@ -108,7 +133,7 @@
         constructor(statusElement: HTMLParagraphElement) {
             this.statusElement = statusElement;
         }
-        breakpoint(interpreter: AlphaInterpreter) {
+        breakpoint(interpreter: AlphaInterpreter): void {
             this.statusElement.innerHTML = "A: " + interpreter.accumulator; + "\n" + "S: " + interpreter.stack; + "\n" + "Index: " + interpreter.exacutable.executionStream.index;
             this.break = true;
         }

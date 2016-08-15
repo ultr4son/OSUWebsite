@@ -315,7 +315,7 @@
             }
             return actualAction;
         }
-        private unReadAmount(amount: number) {
+        private unReadAmount(amount: number):void {
             for (var i = 0; i < amount; i++) {
                 this.reader.unRead();
             }

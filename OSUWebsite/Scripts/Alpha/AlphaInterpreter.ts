@@ -1,15 +1,27 @@
 ﻿module Alpha {
+    /**
+    * Input to the AlphaInterpreter. Must return 0 if there is no more input.
+    */
     export interface AlphaInput {
         input(): number
     }
+    /**
+    * AlphaInterpreter output. 
+    */
     export interface AlphaOutput {
         outNumeric (numeric: number): void;
-        outChar (char: string): void;
+        outStr (str: string): void;
     }
+    /**
+    * Callback interface for when the interpreter detects a breakpoint.
+    */
     export interface AlphaBreakpointHandler {
         breakpoint(interpreter: AlphaInterpreter): void;
     }
 
+    /**
+     * Class that handles the interpretetation of an AlphaExecutable.
+     */
     export class AlphaInterpreter {
         exacutable: AlphaExacutable;
         accumulator: number = 0;
@@ -23,30 +35,37 @@
             this.inputReader = input;
             this.breakpointHandler = breakpoint;
         }
-        public runBlock() {
+        /**
+         * Runs a single processed block of Alpha. Throws an error if there are no more blocks to read.
+         */
+        public runBlock(): void {
             if (this.exacutable.executionStream.atEnd()) {
                 throw "Out of things to execute!";
             }
             var block = this.exacutable.executionStream.read();
             try {
-                this.exec(block, this.exacutable.jumpTable);
+                this.exec(block);
             } catch (err) {
-                this.outputWriter.outChar(err);
+                this.outputWriter.outStr(err);
             }
             if (block.breakpoint) {
                 this.breakpointHandler.breakpoint(this);
             }
         }
-        public atEnd() {
+        /**
+         * Returns true if there are no more blocks to execute.
+         */
+        public atEnd(): boolean {
             return this.exacutable.executionStream.atEnd();
         }
-        private exec(block: AlphaBlock, jumpTable: { [tagName: string]: number }) {
-            if (block.blockType == BlockType.TAG) {
-                return; //Nothing to do here.
-            }
-            var value: number;
+        /**
+         * Extract the numerical representation of a block value
+         * @param block The block to extract.
+         */
+        private readValue(block: AlphaBlock): number {
+            var value;
             if (block.blockType == BlockType.ACTION_TAG_ARG) {
-                value = jumpTable[block.value];
+                value = this.exacutable.jumpTable[block.value];
             }
             else {
                 if (block.value == "A") {
@@ -68,6 +87,17 @@
                 }
                 value = <number>block.value;
             }
+            return value;
+        }
+        /**
+         * Execute a block of alpha code.
+         * @param block The block to execute.
+         */
+        private exec(block: AlphaBlock): void {
+            if (block.blockType == BlockType.TAG) {
+                return; //Nothing to do here.
+            }
+            var value: number = this.readValue(block);
             switch (block.actionType) {
                 case ActionType.ACCUMULATE:
                     this.accumulate(value);
@@ -97,7 +127,7 @@
                     }
                     break;
                 case ActionType.OUTPUT_CHAR:
-                    this.outputWriter.outChar(String.fromCharCode(this.accumulator));
+                    this.outputWriter.outStr(String.fromCharCode(this.accumulator));
                     break;
                 case ActionType.OUTPUT_NUMBER:
                     this.outputWriter.outNumeric(this.accumulator);
@@ -121,7 +151,8 @@
                     throw "Invalid action";
             }
         }
-        private accumulate(amount: number) {
+
+        private accumulate(amount: number): void {
             this.accumulator += amount;
         }
         
