@@ -1,21 +1,7 @@
 ﻿module Alpha {
 
     
-    export enum ActionType {
-        ACCUMULATE,
-        JMP_GREATER,
-        JMP_ZERO,
-        JMP_LESS,
-        JMP,
-        ASSIGN,
-        OUTPUT_CHAR,
-        OUTPUT_NUMBER,
-        PUSH,
-        POP,
-        FLUSH,
-        NOP,
-        NONE
-    }
+  
     export enum BlockType {
         TAG,
         ACTION,
@@ -45,11 +31,11 @@
         /**
         * The type of the action 
         */
-        actionType: ActionType;
+        action: AlphaAction;
         /**
         * Value that either represents a tag, a register, or a number.
         */
-        value: string | number;
+        arguments: string[] | number[];
         /**
         * Name of the tag represented by the block, if blockType if TAG.
         */
@@ -58,10 +44,10 @@
         * Flag that declares that the interpreter should stop after executing the block
         */
         breakpoint: boolean;
-        constructor(blockType: BlockType, actionType: ActionType, value: string | number, breakpoint: boolean, tag?: string) {
+        constructor(blockType: BlockType, actionType: AlphaAction, value: string | number, breakpoint: boolean, tag?: string) {
             this.blockType = blockType;
-            this.actionType = actionType;
-            this.value = value;
+            this.action = actionType;
+            this.arguments = value;
             this.breakpoint;
             this.tag = tag;
         }
@@ -73,7 +59,7 @@
      * A converter class that will convert raw alpha to blocks.
      */
     export class AlphaReader {
-
+        private modules: AlphaModule[];
         private BREAKPOINT_CHAR = "*";
         private TAG_CHAR = ":";
         private ACCUMULATOR_REG = "A";
@@ -81,45 +67,8 @@
         private INPUT_REG = "I";
         private STACK_REG = "S";
         private CHAR_DELIMITER = "'";
-        static associationTable =
-        {
-            "acc": ActionType.ACCUMULATE,
-            "a": ActionType.ACCUMULATE,
-
-            "b": ActionType.JMP_GREATER,
-            "jgz": ActionType.JMP_GREATER,
-
-            "c": ActionType.JMP_ZERO,
-            "jez": ActionType.JMP_ZERO,
-
-            "d": ActionType.JMP_LESS,
-            "jlz": ActionType.JMP_LESS,
-
-            "e": ActionType.JMP,
-            "jmp": ActionType.JMP,
-
-            "g": ActionType.ASSIGN,
-            "giv": ActionType.ASSIGN,
-
-            "o": ActionType.OUTPUT_CHAR,
-            "oc": ActionType.OUTPUT_CHAR,
-
-            "n": ActionType.OUTPUT_NUMBER,
-            "on": ActionType.OUTPUT_NUMBER,
-
-            "p": ActionType.PUSH,
-            "push": ActionType.PUSH,
-
-            "l": ActionType.POP,
-            "pop": ActionType.POP,
-
-            "f": ActionType.FLUSH,
-            "flush": ActionType.FLUSH,
-
-            "z": ActionType.NOP,
-            "nop": ActionType.NOP
-        }
-
+        private ACTION_DELIMITER = ";";
+        
         reader: Structure.Stream<string>
         blocks: AlphaBlock[] = [];
 
@@ -284,6 +233,10 @@
             var mostLikely = "";
             do {
                 var c = this.reader.read();
+                if (this.terminationCharacter(c)) {
+                    this.reader.unRead();
+                    break;
+                }
                 actionAccumulator += c;
 
                 //Find which characters would be in a valid command.
@@ -335,6 +288,7 @@
                 c == this.TAG_CHAR ||
                 c == this.CHAR_DELIMITER || 
                 c == "-" ||
+                c == this.ACTION_DELIMITER || 
                 isNumber(c);
 
             return standardTerminator;

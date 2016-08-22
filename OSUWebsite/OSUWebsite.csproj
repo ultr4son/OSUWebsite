@@ -27,7 +27,10 @@
     <Content Include="baseStyle.css" />
     <Content Include="index.html" />
     <None Include="Scripts\jquery-3.1.0-vsdoc.js" />
+    <Content Include="me.jpg" />
+    <Content Include="millpanel.jpg" />
     <Content Include="NavBar.html" />
+    <Content Include="Reference.html" />
     <Content Include="Scripts\jquery-3.1.0.js" />
     <Content Include="Scripts\jquery-3.1.0.min.js" />
     <Content Include="Scripts\jquery-3.1.0.slim.js" />
@@ -40,7 +43,7 @@
     <TypeScriptCompile Include="Scripts\Alpha\AlphaReader.ts" />
     <TypeScriptCompile Include="Scripts\Alpha\AlphaUIHandler.ts" />
     <TypeScriptCompile Include="Scripts\Alpha\Stream.ts" />
-    <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="navbarPage.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
   </ItemGroup>
   <ItemGroup>

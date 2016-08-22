@@ -7,3 +7,22 @@ img.smallImage
 	height: auto;
 	width: 25%;
 }
+img.rotatedSmallImage 
+{
+	height: auto;
+	width: 25%;
+    rotation-point:center;
+    rotation:180deg;
+}
+.formattedText 
+{
+    white-space: pre-wrap;
+}
+.mePicture
+{
+    height:auto;
+    width: 15%;
+    float:right;
+    margin:auto;
+    overflow:hidden
+}
