@@ -1,6 +1,6 @@
 <head>
 	<script src = "Scripts/jquery-3.1.0.min.js" type = "text/javascript"></script>
-	<script src = "app.js" type = "text/javascript"></script>
+	<script src = "navbar.js" type = "text/javascript"></script>
 </head>
 <body>
 <div id = "navbar"></div>
@@ -10,18 +10,18 @@
 <p><strong>S: </strong>Stack, gives 0 if empty.</p> 
 <p><strong>I: </strong>Next available input in numerical form, gives 0 if empty</p> 
 <h1>Commands</h1> 
-<p><strong>a[n/Z/S/I]: </strong> Add a number or register to A</p>
-<p><strong>b[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions if A &gt; 0</p>
-<p><strong>c[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of  instructions if A = 0</p>
-<p><strong>d[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions if A &lt; 0</p>
-<p><strong>e[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions</p>
-<p><strong>g[n/Z/S/I/tag]: </strong> Assign a number or register to A</p>
-<p><strong>o: </strong> Output A as an ascii encoded character</p>
-<p><strong>n: </strong> Output A as a number</p>
-<p><strong>p: </strong> Push A onto S</p>
-<p><strong>l: </strong> Pop S onto A</p>
-<p><strong>f: </strong> Remove all pushed values from S</p>
-<p><strong>z: </strong> Do nothing</p>
+<p><strong>add[n/Z/S/I]: </strong> Add a number or register to A</p>
+<p><strong>jgz[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions if A &gt; 0</p>
+<p><strong>jez[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of  instructions if A = 0</p>
+<p><strong>jlz[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions if A &lt; 0</p>
+<p><strong>jmp[n/Z/S/I/tag]: </strong> Jump a number or register amount or tag of instructions</p>
+<p><strong>giv[n/Z/S/I/tag]: </strong> Assign a number or register to A</p>
+<p><strong>oc: </strong> Output A as an ascii encoded character</p>
+<p><strong>on: </strong> Output A as a number</p>
+<p><strong>push: </strong> Push A onto S</p>
+<p><strong>pop: </strong> Pop S onto A</p>
+<p><strong>flush: </strong> Remove all pushed values from S</p>
+<p><strong>nop: </strong> Do nothing</p>
 <p><strong>*: </strong> Attaches to the instruction behind it. After the instruction executes, the running environment will breakpoint.</p>
 <p><strong>:tagname: : </strong>Put colons around a name to make it a tag. I can be used as an argument in jump instructions. The instruction will jump to the location of that tag</p>
 <p><strong>#comment#: </strong>Put hashtags around a comment. It will be ignored by the interpreter.</p>

@@ -85,7 +85,9 @@
                 else if (block.value == "I") {
                     value = this.inputReader.input();
                 }
-                value = <number>block.value;
+                else {
+                    value = <number>block.value;
+                }
             }
             return value;
         }

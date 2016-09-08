@@ -16,8 +16,16 @@ window.onload = () => {
     runButton.onclick = (ev: any) => {
         uiHandler.runAlphaInterpreter();
     };
-    stopButton.onclick = uiHandler.stop;
-    pauseButton.onclick = uiHandler.pause;
-    stepButton.onclick = uiHandler.step;
-    continueButton.onclick = uiHandler.continue;
+    stopButton.onclick = (ev: any) => {
+        uiHandler.stop();
+    };
+    pauseButton.onclick = (ev: any) => {
+        uiHandler.pause();
+    }
+    stepButton.onclick = (ev: any) => {
+        uiHandler.step();
+    }
+    continueButton.onclick = (ev: any) => {
+        uiHandler.continue();
+    }
 }

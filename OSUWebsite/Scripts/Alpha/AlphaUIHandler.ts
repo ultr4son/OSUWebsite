@@ -55,7 +55,7 @@
          * Stop execution and update the breakpoint handler.
          */
         public pause(): void {
-            this.breakpointHandler.break = true;
+            this.breakpointHandler.shouldBreak = true;
             this.breakpointHandler.breakpoint(this.interpreter);
         }
         /**
@@ -68,7 +68,7 @@
          * Continue normal execution
          */
         public continue(): void {
-            this.breakpointHandler.break = false;
+            this.breakpointHandler.shouldBreak = false;
         }
         /**
          * Handles a single step of execution. Will schedule itself if a block is run.
@@ -83,7 +83,7 @@
                 return; //This will cancel the next immediate.
             }
 
-            if (ui.breakpointHandler.break) {
+            if (ui.breakpointHandler.shouldBreak) {
                 ui.runAlphaPeriodic();
                 return;
             }
@@ -118,10 +118,10 @@
             this.inputIndex = 0;
         }
         input(): number {
-            if (this.inputIndex > this.inputElement.value.length) {
+            if (this.inputIndex + 1 > this.inputElement.value.length || this.inputElement.value.length == 0) {
                 return 0;
             }
-            var input = this.inputElement.value.substring(0, this.inputIndex).charCodeAt(0);
+            var input = this.inputElement.value.substring(this.inputIndex, this.inputIndex + 1).charCodeAt(0);
             this.inputIndex++;
            
             return input;
@@ -129,13 +129,13 @@
     }
     class AlphaUIBreakpoint implements AlphaBreakpointHandler {
         statusElement: HTMLParagraphElement;
-        break: boolean = false;
+        shouldBreak: boolean = false;
         constructor(statusElement: HTMLParagraphElement) {
             this.statusElement = statusElement;
         }
         breakpoint(interpreter: AlphaInterpreter): void {
-            this.statusElement.innerHTML = "A: " + interpreter.accumulator; + "\n" + "S: " + interpreter.stack; + "\n" + "Index: " + interpreter.exacutable.executionStream.index;
-            this.break = true;
+            this.statusElement.innerHTML = "A: " + interpreter.accumulator + "<br>" + "S: " + interpreter.stack.toString() + "<br>" + "Index: " + interpreter.exacutable.executionStream.index;
+            this.shouldBreak = true;
         }
 
     }

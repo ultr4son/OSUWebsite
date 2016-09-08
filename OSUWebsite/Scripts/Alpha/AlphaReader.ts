@@ -62,7 +62,7 @@
             this.blockType = blockType;
             this.actionType = actionType;
             this.value = value;
-            this.breakpoint;
+            this.breakpoint = breakpoint;
             this.tag = tag;
         }
 
@@ -81,42 +81,31 @@
         private INPUT_REG = "I";
         private STACK_REG = "S";
         private CHAR_DELIMITER = "'";
+        private ACTION_DELIMITER = ";"; //To prevent instances where three commands 'a' 'c' and 'c' are interpreted as 'acc'. Make this mandatory?
         static associationTable =
         {
             "acc": ActionType.ACCUMULATE,
-            "a": ActionType.ACCUMULATE,
 
-            "b": ActionType.JMP_GREATER,
             "jgz": ActionType.JMP_GREATER,
 
-            "c": ActionType.JMP_ZERO,
             "jez": ActionType.JMP_ZERO,
 
-            "d": ActionType.JMP_LESS,
             "jlz": ActionType.JMP_LESS,
 
-            "e": ActionType.JMP,
             "jmp": ActionType.JMP,
 
-            "g": ActionType.ASSIGN,
             "giv": ActionType.ASSIGN,
 
-            "o": ActionType.OUTPUT_CHAR,
             "oc": ActionType.OUTPUT_CHAR,
 
-            "n": ActionType.OUTPUT_NUMBER,
             "on": ActionType.OUTPUT_NUMBER,
 
-            "p": ActionType.PUSH,
             "push": ActionType.PUSH,
 
-            "l": ActionType.POP,
             "pop": ActionType.POP,
 
-            "f": ActionType.FLUSH,
             "flush": ActionType.FLUSH,
 
-            "z": ActionType.NOP,
             "nop": ActionType.NOP
         }
 
@@ -170,11 +159,12 @@
                 case ActionType.JMP_GREATER:
                 case ActionType.JMP_LESS:
                 case ActionType.JMP_ZERO:
-                case ActionType.PUSH:
                     if (this.reader.peek() == this.TAG_CHAR) {
                         blockType = BlockType.ACTION_TAG_ARG; // Flag that extra tag processing will be needed to the interpreter
                     }
                     return new AlphaBlock(blockType, action, this.readValue(), this.findBreakpoint());
+
+                case ActionType.PUSH:
                 case ActionType.POP:
                 case ActionType.FLUSH:
                 case ActionType.NOP:
@@ -248,8 +238,13 @@
          * Read a character and convert it into an ascii code number.
          */
         private readCharAsNumeric(): number {
-            var c = this.reader.read();
-            this.reader.read(); //skip endquote
+            this.reader.read(); //skip beginning quote
+            var c = this.reader.read(); //Read char
+            var end = this.reader.read(); //skip endquote
+            if (end != this.CHAR_DELIMITER) { //helpful for the programmer
+                throw "Char arguments must be one char long!"
+            }
+
             return c.charCodeAt(0);
         }
         /**
@@ -284,8 +279,12 @@
             var mostLikely = "";
             do {
                 var c = this.reader.read();
+                if (c == this.ACTION_DELIMITER) {
+                    mostLikely = actionAccumulator;
+                    break;
+                }
                 actionAccumulator += c;
-
+                
                 //Find which characters would be in a valid command.
                 acceptableCharacters = this.acceptableCharacters(actionAccumulator); 
 
@@ -309,7 +308,7 @@
             } while (!this.reader.atEnd());
             var actualAction = this.toAction(mostLikely);
             if (actualAction == null) {
-                var invalid = mostLikely == "" ? actionAccumulator : mostLikely; //Try to give a helpful error message.
+                var invalid = actionAccumulator //Try to give a helpful error message.
                 throw "Invalid action " + invalid;
 
             }
